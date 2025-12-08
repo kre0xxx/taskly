@@ -1,0 +1,57 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "admin",
+      "password": "admin123",
+      "firstName": "Алексей",
+      "lastName": "Иванов",
+      "role": "admin",
+      "createdAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "username": "user1",
+      "password": "user123",
+      "firstName": "Мария",
+      "lastName": "Петрова",
+      "role": "user",
+      "createdAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": 3,
+      "username": "user2",
+      "password": "user123",
+      "firstName": "Иван",
+      "lastName": "Сидоров",
+      "role": "user",
+      "createdAt": "2024-01-01T00:00:00.000Z"
+    }
+  ],
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Подготовить отчет",
+      "dueDate": "2024-01-20",
+      "priority": "high",
+      "assignedTo": 2,
+      "completed": false
+    },
+    {
+      "id": 2,
+      "title": "Проверить почту",
+      "dueDate": "2024-01-15",
+      "priority": "medium",
+      "assignedTo": 3,
+      "completed": true
+    },
+    {
+      "id": 3,
+      "title": "Запланировать встречу",
+      "dueDate": "2024-01-25",
+      "priority": "low",
+      "assignedTo": 2,
+      "completed": false
+    }
+  ]
+}
