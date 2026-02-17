@@ -3,9 +3,6 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
-    "@testing-library/jest-dom": "^5.16.5",
-    "@testing-library/react": "^13.4.0",
-    "@testing-library/user-event": "^13.5.0",
     "axios": "^1.6.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -21,11 +18,18 @@
     "server": "json-server --watch db.json --port 3001",
     "dev": "concurrently \"npm start\" \"npm run server\"",
     "lint": "eslint src/**/*.js",
-    "format": "prettier --write \"src/**/*.{js,jsx,json,css}\""
+    "format": "prettier --write \"src/**/*.{js,jsx,json,css}\"",
+    "test:watch": "react-scripts test --watch",
+    "test:coverage": "react-scripts test --coverage",
+    "test:api": "react-scripts test --testPathPattern=api.test.js",
+    "test:components": "react-scripts test --testPathPattern=Login.test.js|TaskList.test.js|TaskForm.test.js"
   },
   "devDependencies": {
-    "json-server": "^0.17.4",
-    "concurrently": "^8.2.2"
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "concurrently": "^8.2.2",
+    "json-server": "^0.17.4"
   },
   "browserslist": {
     "production": [

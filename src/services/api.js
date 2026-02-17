@@ -12,18 +12,17 @@ const api = axios.create({
 });
 
 
-// api.interceptors.response.use(
-//   response => response,
-//   error => {
-//     console.error('API Error:', error.message);
-//     if (error.code === 'ERR_NETWORK') {
-//       alert('Сервер не запущен! Запустите JSON Server командой: npm run server');
-//     }
-//     return Promise.reject(error);
-//   }
-// );
+api.interceptors.response.use(
+  response => response,
+  error => {
+    console.error('API Error:', error.message);
+    if (error.code === 'ERR_NETWORK') {
+      alert('Сервер не запущен! Запустите JSON Server командой: npm run server');
+    }
+    return Promise.reject(error);
+  }
+);
 
-// Функция для проверки существования имени пользователя
 const checkUsernameExists = async (username) => {
   try {
     const response = await api.get('/users', {
@@ -67,7 +66,6 @@ export const authService = {
     }
   },
 
-  // Моковая аутентификация для разработки
   mockLogin(username, password) {
     const mockUsers = [
       { id: 1, username: 'admin', password: 'admin123', firstName: 'Алексей', lastName: 'Иванов', role: 'admin', createdAt: '2024-01-01T00:00:00.000Z' },
@@ -270,3 +268,5 @@ export const deleteTask = (id) => taskService.deleteTask(id);
 export const getUsers = () => taskService.getUsers();
 export const getUser = (id) => taskService.getUser(id);
 export const deleteUser = (id) => taskService.deleteUser(id);
+
+

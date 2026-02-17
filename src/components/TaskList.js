@@ -41,6 +41,7 @@ const TaskList = ({ user }) => {
         setTasks(tasks.filter(task => task.id !== id));
       } catch (error) {
         console.error('Ошибка удаления задачи:', error);
+        alert('Не удалось удалить задачу');
       }
     }
   };
@@ -52,6 +53,7 @@ const TaskList = ({ user }) => {
       setTasks(tasks.map(t => t.id === task.id ? updatedTask : t));
     } catch (error) {
       console.error('Ошибка обновления задачи:', error);
+      alert('Не удалось обновить статус задачи');
     }
   };
 
@@ -70,38 +72,50 @@ const TaskList = ({ user }) => {
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('ru-RU');
+    if (!dateString) return 'Не указана';
+    try {
+      return new Date(dateString).toLocaleDateString('ru-RU');
+    } catch (error) {
+      return dateString;
+    }
   };
 
   const exportToCSV = () => {
-    const headers = ['Название', 'Дата выполнения', 'Приоритет', 'Исполнитель', 'Статус'];
-    const csvData = [
-      headers.join(','),
-      ...filteredTasks.map(task => [
-        `"${task.title}"`,
-        task.dueDate,
-        getPriorityText(task.priority),
-        getUserName(task.assignedTo),
-        task.completed ? 'Выполнена' : 'В работе'
-      ].join(','))
-    ].join('\n');
+    try {
+      const headers = ['Название', 'Дата выполнения', 'Приоритет', 'Исполнитель', 'Статус'];
+      const csvData = [
+        headers.join(','),
+        ...filteredTasks.map(task => [
+          `"${task.title.replace(/"/g, '""')}"`,
+          task.dueDate,
+          getPriorityText(task.priority),
+          getUserName(task.assignedTo).replace(/,/g, ''),
+          task.completed ? 'Выполнена' : 'В работе'
+        ].join(','))
+      ].join('\n');
 
-    const blob = new Blob([csvData], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `tasks_${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
+      const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `tasks_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Ошибка экспорта в CSV:', error);
+      alert('Не удалось экспортировать данные');
+    }
   };
 
   // Фильтрация задач
-  const userTasks = user.role === 'admin' 
+  const userTasks = user?.role === 'admin' 
     ? tasks 
-    : tasks.filter(task => task.assignedTo === user.id);
+    : tasks.filter(task => task.assignedTo === user?.id);
 
   const filteredTasks = userTasks.filter(task => {
-    const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = task.title?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesPriority = filterPriority === 'all' || task.priority === filterPriority;
     const matchesStatus = filterStatus === 'all' || 
       (filterStatus === 'completed' && task.completed) ||
@@ -114,12 +128,12 @@ const TaskList = ({ user }) => {
   const sortedTasks = [...filteredTasks].sort((a, b) => {
     switch(sortBy) {
       case 'date':
-        return new Date(a.dueDate) - new Date(b.dueDate);
+        return new Date(a.dueDate || 0) - new Date(b.dueDate || 0);
       case 'priority':
         const priorityOrder = { high: 3, medium: 2, low: 1 };
-        return priorityOrder[b.priority] - priorityOrder[a.priority];
+        return (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0);
       case 'title':
-        return a.title.localeCompare(b.title);
+        return (a.title || '').localeCompare(b.title || '');
       case 'status':
         return (a.completed === b.completed) ? 0 : a.completed ? 1 : -1;
       default:
@@ -129,6 +143,10 @@ const TaskList = ({ user }) => {
 
   if (loading) {
     return <div className="loading">Загрузка задач...</div>;
+  }
+
+  if (!user) {
+    return <div className="no-user">Пользователь не авторизован</div>;
   }
 
   return (
@@ -142,6 +160,7 @@ const TaskList = ({ user }) => {
             <button
               onClick={exportToCSV}
               className="export-btn"
+              disabled={sortedTasks.length === 0}
             >
               📊 Экспорт в CSV
             </button>
@@ -163,11 +182,16 @@ const TaskList = ({ user }) => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="search-input"
+            aria-label="Поиск по названию задачи"
           />
         </div>
         
         <div className="filter-group">
+          <label htmlFor="priority-filter" className="filter-label">
+            Приоритет
+          </label>
           <select
+            id="priority-filter"
             value={filterPriority}
             onChange={(e) => setFilterPriority(e.target.value)}
             className="filter-select"
@@ -180,7 +204,11 @@ const TaskList = ({ user }) => {
         </div>
         
         <div className="filter-group">
+          <label htmlFor="status-filter" className="filter-label">
+            Статус
+          </label>
           <select
+            id="status-filter"
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
             className="filter-select"
@@ -192,7 +220,11 @@ const TaskList = ({ user }) => {
         </div>
 
         <div className="filter-group">
+          <label htmlFor="sort-filter" className="filter-label">
+            Сортировка
+          </label>
           <select
+            id="sort-filter"
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
             className="filter-select"
@@ -232,8 +264,16 @@ const TaskList = ({ user }) => {
           sortedTasks.map(task => (
             <div 
               key={task.id} 
-              className={`task-card ${task.priority} scroll-reveal`}
+              className={`task-card ${task.priority} ${task.completed ? 'completed' : ''} scroll-reveal`}
               onClick={() => setSelectedTask(task)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setSelectedTask(task);
+                }
+              }}
             >
               <div className="task-header">
                 <h3 className="task-title">{task.title}</h3>
@@ -268,6 +308,7 @@ const TaskList = ({ user }) => {
                         navigate(`/tasks/edit/${task.id}`);
                       }}
                       className="action-btn edit-btn"
+                      aria-label={`Редактировать задачу "${task.title}"`}
                     >
                       Редактировать
                     </button>
@@ -277,6 +318,7 @@ const TaskList = ({ user }) => {
                         handleDelete(task.id);
                       }}
                       className="action-btn delete-btn"
+                      aria-label={`Удалить задачу "${task.title}"`}
                     >
                       Удалить
                     </button>
@@ -288,6 +330,7 @@ const TaskList = ({ user }) => {
                       handleComplete(task);
                     }}
                     className="action-btn complete-btn"
+                    aria-label={task.completed ? 'Возобновить задачу' : 'Завершить задачу'}
                   >
                     {task.completed ? 'Возобновить' : 'Завершить'}
                   </button>
@@ -300,7 +343,13 @@ const TaskList = ({ user }) => {
 
       {/* Модальное окно просмотра задачи */}
       {selectedTask && (
-        <div className="modal-overlay" onClick={() => setSelectedTask(null)}>
+        <div 
+          className="modal-overlay" 
+          onClick={() => setSelectedTask(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Детали задачи"
+        >
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <h2>{selectedTask.title}</h2>
             <div className="modal-details">
@@ -312,7 +361,10 @@ const TaskList = ({ user }) => {
             <div className="modal-actions">
               {user.role === 'admin' && (
                 <button
-                  onClick={() => navigate(`/tasks/edit/${selectedTask.id}`)}
+                  onClick={() => {
+                    setSelectedTask(null);
+                    navigate(`/tasks/edit/${selectedTask.id}`);
+                  }}
                   className="action-btn edit-btn"
                 >
                   Редактировать
